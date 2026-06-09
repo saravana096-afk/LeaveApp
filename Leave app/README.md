@@ -34,10 +34,15 @@ LeaveApp/
 │   ├── config.py           # Dev / prod / test configs
 │   ├── models.py           # SQLAlchemy models (User, LeaveBalance, LeaveRequest)
 │   ├── requirements.txt
-│   └── routes/
-│       ├── auth.py         # Register, login, profile
-│       ├── users.py        # User management, leave balances
-│       └── leaves.py       # Leave requests CRUD + approve/reject
+│   ├── routes/
+│   │   ├── auth.py         # Register, login, profile
+│   │   ├── users.py        # User management, leave balances
+│   │   └── leaves.py       # Leave requests CRUD + approve/reject
+│   └── tests/
+│       ├── conftest.py     # Shared fixtures (app, client)
+│       ├── test_auth.py    # Auth tests
+│       ├── test_leaves.py  # Leave request tests
+│       └── test_users.py   # User management tests
 └── frontend/
     ├── index.html
     ├── vite.config.js
@@ -131,6 +136,41 @@ The frontend runs on `http://localhost:5173` and proxies all `/api` requests to 
 | GET | `/api/users/:id/leave-balance` | Get leave balance |
 | POST | `/api/users/:id/leave-balance` | Set leave balance |
 | POST | `/api/users/:id/toggle-admin` | Toggle admin role |
+
+---
+
+## Testing
+
+The backend has a full pytest test suite using an in-memory SQLite database — no setup required.
+
+### Run Tests
+
+```bash
+cd backend
+pip install pytest
+python -m pytest tests/ -v
+```
+
+### Test Summary
+
+| File | Tests | Coverage |
+|---|---|---|
+| `test_auth.py` | 12 | Register, login, profile, gender update |
+| `test_leaves.py` | 17 | Submit, approve, reject, cancel, maternity restriction |
+| `test_users.py` | 11 | List users, set/get balance, toggle admin |
+| **Total** | **40** | **All passing** |
+
+### Key Scenarios Tested
+
+- Duplicate username / email rejected on register
+- Wrong password returns 401
+- Protected routes reject requests without a valid JWT
+- Leave submission fails with no balance or insufficient balance
+- Maternity leave blocked for male employees, allowed for female
+- Approving a leave deducts from the balance
+- Cancelling an approved leave restores the balance
+- Non-admin users cannot approve, reject, set balances, or toggle roles
+- Double-approving a request returns 400
 
 ---
 
